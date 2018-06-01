@@ -6,7 +6,7 @@ It is intended to have the features of all the current discord bots in the [Assa
 
 Current Features Include:
 * Giveaway Command
-  * Includes Realtime Minute Countdown
+  * Includes Countdown Timer
   
 
 
