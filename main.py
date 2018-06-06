@@ -80,4 +80,4 @@ async def giveaway(ctx, time: str):
 
 
 
-bot.run('T O K E N')  
+bot.run('TOKEN')  
