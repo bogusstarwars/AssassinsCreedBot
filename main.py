@@ -24,7 +24,7 @@ async def giveaway(ctx, time: str):
     """Starts a giveaway. Only Staff Role can use this. Requires time input (in d/h/m/s). (Ex: $giveaway 10h)"""
     #Is the Author a Staff member
     if discord.utils.get(ctx.guild.roles, name='Staff') in ctx.message.author.roles:
-        #Are we dealing with seconds, minutes, hours, or days 
+        #Are we dealing with seconds, minutes, hours, or day 
         if 's' in time:
             t = int(time[:-1])
             timey = time[:-1] + ' seconds'
