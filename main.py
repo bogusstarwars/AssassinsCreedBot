@@ -21,10 +21,10 @@ async def invite(ctx):
 
 @bot.command()
 async def giveaway(ctx, time: str):
-    """Starts a giveaway. Only Staff Role can use this. Requires time input (in h/m/s). (Ex: $giveaway 10h)"""
+    """Starts a giveaway. Only Staff Role can use this. Requires time input (in d/h/m/s). (Ex: $giveaway 10h)"""
     #Is the Author a Staff member
     if discord.utils.get(ctx.guild.roles, name='Staff') in ctx.message.author.roles:
-        #Are we dealing with seconds, minutes, or hours 
+        #Are we dealing with seconds, minutes, hours, or days 
         if 's' in time:
             t = int(time[:-1])
             timey = time[:-1] + ' seconds'
@@ -34,22 +34,35 @@ async def giveaway(ctx, time: str):
         elif 'h' in time:
             t = int(time[:-1])*3600
             timey = time[:-1] + ' hours'
+        elif 'd' in time:
+            t = int(time[:-1])*86400
+            timey = time[:-1] + ' days'
         nessage = await ctx.send('🎉 React to this message to enter the giveaway! This giveaway will end in {}! '.format(timey))
         await nessage.add_reaction('🎉')
         while t > 0:
             if (t <= 60):
                 await asyncio.sleep(t)
-                t = (t - 60)
+                t = (t - 60)    
             elif t > 60 and t < 3600:
                 await asyncio.sleep(60)
                 t = (t - 60)
                 timey = str(int(t/60)) + ' minute(s)'
                 await nessage.edit(content='🎉 React to this message to enter the giveaway! This giveaway will end in {} ! '.format(timey))
-            elif t >= 3600:
-                await asyncio.sleep(900)
-                t = (t - 900)
-                timey = str(t/3600) + ' hour(s)'
-                await nessage.edit(content='🎉 React to this message to enter the giveaway! This giveaway will end in {} ! '.format(timey))
+            elif t >= 3600 and t < 86400:
+                await asyncio.sleep(60)
+                t = (t - 60)
+                h = int(t/3600)
+                m = (t%3600)/60
+                #timey = str(t/3600) + ' hour(s)'
+                await nessage.edit(content='🎉 React to this message to enter the giveaway! This giveaway will end in {} hours and {} minutes! '.format(h,m))
+            elif t >= 86400:
+                await asyncio.sleep(60)
+                t = (t - 60)
+                d = int(t/86400)
+                h = int((t%86400)/3600)
+                m = int(((t%86400)%3600)/60)
+                #timey = str(t/86400) + ' day(s)'
+                await nessage.edit(content='🎉 React to this message to enter the giveaway! This giveaway will end in {} days, {} hours, and {} minutes! '.format(d,h,m))
         await nessage.remove_reaction('🎉',bot.user)
         await nessage.edit(content='🎉 React to this message to enter the giveaway! Time is UP! Winner is below!')
         reacts = discord.utils.get(bot._connection._messages, id=nessage.id).reactions
