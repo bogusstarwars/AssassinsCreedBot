@@ -2,82 +2,88 @@ import discord
 import asyncio
 import random
 from discord.ext import commands
+import sys, traceback
+
+initial_extensions = ['cogs.giveaway',
+                      'cogs.owner']
 
 bot = commands.Bot(command_prefix='$')
+
+bot.loop.set_debug(True)
+# Here we load our extensions(cogs) listed above in [initial_extensions].
+if __name__ == '__main__':
+    for extension in initial_extensions:
+        try:
+            bot.load_extension(extension)
+        except Exception as e:
+            print(f'Failed to load extension {extension}.', file=sys.stderr)
+            traceback.print_exc()
+
 
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
 
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    guild = bot.get_guild(payload.guild_id)
+    heart = discord.utils.get(guild.roles, name = 'HEART')
+    brole = discord.utils.get(guild.roles, name = 'BLUE')
+    yrole = discord.utils.get(guild.roles, name = 'YELLOW')
+    grole = discord.utils.get(guild.roles, name = 'GREEN')
+    mem = guild.get_member(payload.user_id) 
+    if payload.user_id == bot.user.id:
+        return
+    if payload.message_id == bot.rmsg.id:
+        if payload.emoji.name == '\U00002764':
+            await mem.add_roles(heart)
+        elif payload.emoji.name == '\U0001f49b':
+            await mem.add_roles(yrole)
+        elif payload.emoji.name == '\U0001f499':
+            await mem.add_roles(brole)
+        elif payload.emoji.name == '\U0001f49a':
+            await mem.add_roles(grole)
+        
+
+@bot.event
+async def on_raw_reaction_remove(payload):
+    guild = bot.get_guild(payload.guild_id)
+    heart = discord.utils.get(guild.roles, name = 'HEART')
+    brole = discord.utils.get(guild.roles, name = 'BLUE')
+    yrole = discord.utils.get(guild.roles, name = 'YELLOW')
+    grole = discord.utils.get(guild.roles, name = 'GREEN')
+    mem = guild.get_member(payload.user_id)
+    if payload.user_id == bot.user.id:
+        return
+    if payload.message_id == bot.rmsg.id:
+        if payload.emoji.name == '\U00002764':
+            await mem.remove_roles(heart)
+        elif payload.emoji.name == '\U0001f49b':
+            await mem.remove_roles(yrole)
+        elif payload.emoji.name == '\U0001f499':
+            await mem.remove_roles(brole)
+        elif payload.emoji.name == '\U0001f49a':
+            await mem.remove_roles(grole)
+
+
 @bot.command()
 async def ping(ctx):
     """pong"""
-    await ctx.send('pong')
+    embed = discord.Embed(title = 'ping',colour=discord.Colour(0xaf1329),description="pong")
+    await ctx.send(content=None,embed=embed)
 
 @bot.command()
 async def invite(ctx):
     """Creates Invite link"""
     await ctx.send('https://discordapp.com/oauth2/authorize?client_id=451647260707651596&scope=bot')
 
-@bot.command()
-async def giveaway(ctx, time: str):
-    """Starts a giveaway. Only Staff Role can use this. Requires time input (in d/h/m/s). (Ex: $giveaway 10h)"""
-    #Is the Author a Staff member
-    if discord.utils.get(ctx.guild.roles, name='Staff') in ctx.message.author.roles:
-        #Are we dealing with seconds, minutes, hours, or day 
-        if 's' in time:
-            t = int(time[:-1])
-            timey = time[:-1] + ' seconds'
-        elif 'm' in time:
-            t = int(time[:-1])*60
-            timey = time[:-1] + ' minutes' 
-        elif 'h' in time:
-            t = int(time[:-1])*3600
-            timey = time[:-1] + ' hours'
-        elif 'd' in time:
-            t = int(time[:-1])*86400
-            timey = time[:-1] + ' days'
-        nessage = await ctx.send('🎉 React to this message to enter the giveaway! This giveaway will end in {}! '.format(timey))
-        await nessage.add_reaction('🎉')
-        while t > 0:
-            if (t <= 60):
-                await asyncio.sleep(t)
-                t = (t - 60)    
-            elif t > 60 and t < 3600:
-                await asyncio.sleep(60)
-                t = (t - 60)
-                timey = str(int(t/60)) + ' minute(s)'
-                await nessage.edit(content='🎉 React to this message to enter the giveaway! This giveaway will end in {} ! '.format(timey))
-            elif t >= 3600 and t < 86400:
-                await asyncio.sleep(60)
-                t = (t - 60)
-                h = int(t/3600)
-                m = (t%3600)/60
-                #timey = str(t/3600) + ' hour(s)'
-                await nessage.edit(content='🎉 React to this message to enter the giveaway! This giveaway will end in {} hours and {} minutes! '.format(h,m))
-            elif t >= 86400:
-                await asyncio.sleep(60)
-                t = (t - 60)
-                d = int(t/86400)
-                h = int((t%86400)/3600)
-                m = int(((t%86400)%3600)/60)
-                #timey = str(t/86400) + ' day(s)'
-                await nessage.edit(content='🎉 React to this message to enter the giveaway! This giveaway will end in {} days, {} hours, and {} minutes! '.format(d,h,m))
-        await nessage.remove_reaction('🎉',bot.user)
-        await nessage.edit(content='🎉 React to this message to enter the giveaway! Time is UP! Winner is below!')
-        reacts = discord.utils.get(bot._connection._messages, id=nessage.id).reactions
-        print (reacts)
-        users = await reacts[0].users().flatten()
-        print (users)
-        winner = random.choice(users) 
-        await ctx.send('{0.name} has won!'.format(winner))
-    
-    else:
-        await ctx.send('Only Staff can start giveaways.')
-    
 
-
-
+@bot.command()    
+async def rolepress(ctx):
+    bot.rmsg = await ctx.send('Click on an emoji to get that role!')
+    for emoji in ['💙','❤','💚','💛']:
+        await bot.rmsg.add_reaction(emoji)
 
 
 bot.run('TOKEN')  
